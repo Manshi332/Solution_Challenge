@@ -3,6 +3,7 @@ import data_handler as m1
 import bias_detector as m2_audit 
 import bias_fixer as m2_fix
 import ai_auditor as ai 
+import about_team as team  
 
 st.set_page_config(page_title="FairFrame Pro | AI Auditor", page_icon="⚖️", layout="wide")
 
@@ -44,7 +45,6 @@ if menu == "Audit Dashboard":
                 st.subheader("Risk Level")
                 st.write(insight["risk"])
 
-                # ✅ ONLY ONE PDF BUTTON
                 pdf_data = ai.create_pdf(st.session_state.results, insight["finding"])
 
                 st.download_button(
@@ -55,3 +55,6 @@ if menu == "Audit Dashboard":
                 )
 
                 st.success("✅ This system ensures fairness-aware decision making using AI-driven auditing and mitigation.")
+
+elif menu == "About Team": 
+    team.show_about_team()

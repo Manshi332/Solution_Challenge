@@ -151,7 +151,10 @@ if menu == "Audit Dashboard":
             )
 
             st.success("✅ This system ensures fairness-aware decision making using AI-driven auditing and mitigation.")
-
+            
+elif menu == "Technical Methodology":
+    tech_method.show_technical_methodology()
+    
 elif menu == "About Team": 
     team.show_about_team()
 

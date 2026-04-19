@@ -165,7 +165,7 @@ def create_pdf(audit_results, report_text):
 
 def generate_micro_insight(context_type, df=None, target=None, protected_cols=None, stats=None):
     """
-    Generates short real-time insights for each step.
+    Context-aware dynamic insights (NOT hardcoded)
     """
 
     try:
@@ -174,18 +174,17 @@ def generate_micro_insight(context_type, df=None, target=None, protected_cols=No
 
         if context_type == "data_upload":
             prompt = f"""
-You are an AI fairness expert.
+You are an AI fairness auditor.
 
-Dataset has {df.shape[0]} rows and {df.shape[1]} columns.
+Dataset shape: {df.shape}
+Columns: {list(df.columns)}
 
-Column names:
-{list(df.columns)}
+Identify:
+- 1 potential proxy risk column
+- 1 good protected attribute suggestion
 
-Give:
-1. One quick risk observation
-2. Suggest 1–2 sensitive attributes
-
-Keep it short (2-3 lines max).
+Be specific. No generic statements.
+Max 3 lines.
 """
 
         elif context_type == "selection":
@@ -194,26 +193,45 @@ User selected:
 Target: {target}
 Protected: {protected_cols}
 
-Comment if this is a good fairness setup or suggest improvement.
-Keep it short.
+Evaluate:
+- Is this a valid fairness setup?
+- Any better suggestion?
+
+Be precise and practical.
 """
 
         elif context_type == "analysis":
+            gap = stats.get('gap', 0)
+            risk = stats.get('risk', 'Unknown')
+            attrs = stats.get('protected_cols', [])
+
             prompt = f"""
-Fairness gap observed: {stats.get('gap',0)}
+Fairness audit results:
 
-Explain in simple terms what this means.
-Is it risky?
+Protected attributes: {attrs}
+Bias gap: {gap:.2f}
+Risk level: {risk}
 
-Keep it short.
+Explain:
+- What this means in real-world terms
+- Whether it violates fairness standards (like 80% rule)
+
+Be sharp and professional (2–3 lines).
 """
 
         elif context_type == "mitigation":
-            prompt = f"""
-Bias mitigation applied.
+            gap = stats.get('gap', 0)
 
-Explain WHY this approach helps reduce bias.
-Keep it simple.
+            prompt = f"""
+Bias mitigation applied using reweighing.
+
+Original bias gap: {gap:.2f}
+
+Explain:
+- Why reweighing is appropriate here
+- What improvement it achieves
+
+Be concise and technical.
 """
 
         else:
@@ -227,14 +245,14 @@ Keep it simple.
         return response.text
 
     except:
-        # fallback (important)
-        if context_type == "data_upload":
-            return "Dataset loaded. Check for sensitive attributes like race, gender, or age."
-        elif context_type == "selection":
-            return "Ensure selected attributes represent meaningful demographic groups."
-        elif context_type == "analysis":
-            return "Higher gap indicates stronger bias across groups."
-        elif context_type == "mitigation":
-            return "Rebalancing reduces unequal treatment across groups."
+        # fallback (still contextual)
+        if context_type == "analysis" and stats:
+            gap = stats.get("gap", 0)
+            if gap > 15:
+                return "High disparity detected. Likely unfair across groups."
+            elif gap > 5:
+                return "Moderate disparity. Needs monitoring."
+            else:
+                return "Low disparity. System is relatively fair."
 
-    return ""
+        return "AI insight unavailable. Please check configuration."

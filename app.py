@@ -138,7 +138,10 @@ if menu == "Audit Dashboard":
             with st.container(border=True):
                 st.markdown("🤖 AI Mitigation Strategy")
                 with st.spinner("🤖 AI thinking..."):
-                    insight = ai.generate_micro_insight("mitigation")
+                    insight = ai.generate_micro_insight(
+                        "mitigation",
+                        stats=st.session_state.results
+                    )
                     st.info(insight)
 
         # --- app.py SECTION 3 ---

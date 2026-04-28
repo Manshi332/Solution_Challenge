@@ -138,10 +138,7 @@ if menu == "Audit Dashboard":
             with st.container(border=True):
                 st.markdown("🤖 AI Mitigation Strategy")
                 with st.spinner("🤖 AI thinking..."):
-                    insight = ai.generate_micro_insight(
-                        "mitigation",
-                        stats=st.session_state.results
-                    )
+                    insight = ai.generate_micro_insight("mitigation")
                     st.info(insight)
 
         # --- app.py SECTION 3 ---
@@ -164,7 +161,13 @@ if menu == "Audit Dashboard":
                     
                     # Export Section at bottom of report
                     pdf_data = ai.create_pdf(st.session_state.results, report_data["finding"])
-                    st.download_button("📥 Download Audit Certificate (PDF)", data=pdf_data, use_container_width=True)
+                    st.download_button(
+                        label="📥 Download Audit Certificate (PDF)",
+                        data=pdf_data,
+                        file_name="FairFrame_Audit_Report.pdf",  # Explicitly name the file
+                        mime="application/pdf",                  # Explicitly set the MIME type
+                        use_container_width=True
+                    )
 
             with tab2:
                 st.info("💡 Use the following code to apply the fairness weights from your generated CSV.")
@@ -207,13 +210,28 @@ with st.sidebar:
     st.divider()
     st.markdown("### 💬 Ethics Strategy Chat")
     
-    # Check if results exist to enable chat
     if "results" in st.session_state:
-        # Suggestion Chips in Sidebar (Small version)
-        if st.button("🧐 Explain Bias", use_container_width=True):
-            st.session_state.temp_prompt = "Can you explain what this bias score means?"
-        if st.button("🔄 How to Reset?", use_container_width=True):
-            st.session_state.temp_prompt = "How do I upload a new CSV to start over?"
+        # Style these as "Suggested Questions"
+        st.caption("Suggested Questions:")
+        if st.button("📊 Explain the Bias Score", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "What does this bias score mean?"})
+            response = ai.get_chatbot_response("score", st.session_state.results, "")
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            st.rerun()
+
+        if st.button("🛠️ How do I fix this?", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "How do I fix this bias?"})
+            response = ai.get_chatbot_response("fix", st.session_state.results, "")
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            st.rerun()
+            
+        if st.button("🕵️ Check for Proxies", use_container_width=True):
+            st.session_state.messages.append({"role": "user", "content": "Are there hidden proxies?"})
+            response = ai.get_chatbot_response("proxy", st.session_state.results, "")
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            st.rerun()
+
+        # ... your chat history loop ...
 
         # Chat History Container (scrollable)
         chat_container = st.container(height=300)

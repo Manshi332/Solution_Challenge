@@ -57,7 +57,7 @@ def generate_ai_report(audit_results, is_mitigated=False):
     try:
         if client:
             # Using 1.5-flash for higher reliability during long generations
-            response = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
+            response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
             return {"risk": risk, "finding": response.text, "source": "Certified by Gemini 1.5 Flash"}
     except Exception:
         return {
@@ -97,7 +97,7 @@ def get_chatbot_response(user_query, audit_results, df_context):
     
     try:
         if client:
-            response = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
+            response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
             return response.text
     except Exception:
         return "I'm currently focused on the current audit. Feel free to ask about the bias score or column risks!"
@@ -238,21 +238,11 @@ Be concise and technical.
             return ""
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash-lite",
             contents=prompt
         )
 
         return response.text
 
-    except:
-        # fallback (still contextual)
-        if context_type == "analysis" and stats:
-            gap = stats.get("gap", 0)
-            if gap > 15:
-                return "High disparity detected. Likely unfair across groups."
-            elif gap > 5:
-                return "Moderate disparity. Needs monitoring."
-            else:
-                return "Low disparity. System is relatively fair."
-
-        return "AI insight unavailable. Please check configuration."
+    except Exception as e:
+        st.error(f"Gemini Error: {e}")
